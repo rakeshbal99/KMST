@@ -1,8 +1,5 @@
-var data = [{"Name" : "Voyager 1","Mission type":"Voyager","Operator" : "NASA / Jet Propulsion Laboratory","Mission duration":"41 years and 26 days","Launch date":"September 5, 1977, 12:56:00 UTC"},
-{"Name" : "Voyager 2","Mission type":"Voyager","Operator" : "NASA / Jet Propulsion Laboratory","Mission duration":"41 years, 1 month and 11 days","Launch date":"August 20, 1977, 14:29:00 UTC, 12:56:00 UTC"},
-{"Name":"Curiosity (rover)","Mission type":"Mars rover","Operator":"NASA","duration":"Primary: 668","Launch date":"November 26, 2011, 15:02:00 UTC[3][4][5]"}
-];
-
+var data_list = [];
+var years_min,years_max;
 $(function(){
   fillData();
   addCover();
@@ -13,6 +10,8 @@ $(function(){
   quote();
   DropBox();
   Author();
+filter_listener();
+get_search();
   // $("blog").hide();
 });
 
@@ -183,6 +182,7 @@ function Countries(){
   }
 }
 
+
 $(document).ready(function () {
    var outputSpan = $('#spanOutput');
    var sliderDiv = $('#slider');
@@ -194,7 +194,7 @@ $(document).ready(function () {
        values: [20, 30],
        slide: function (event, ui) {
            outputSpan.html(ui.values[0] + ' - ' + ui.values[1] + ' Years');
-       },
+          },
        stop: function (event, ui) {
            $('#txtMinAge').val(ui.values[0]);
            $('#txtMaxAge').val(ui.values[1]);
@@ -208,33 +208,11 @@ $(document).ready(function () {
 });
 
 
-var availableTags = [
-    "ActionScript",
-    "AppleScript",
-    "Asp",
-    "BASIC",
-    "C",
-    "C++",
-    "Clojure",
-    "COBOL",
-    "ColdFusion",
-    "Cycle",
-    "Erlang",
-    "Fortran",
-    "Groovy",
-    "Haskell",
-    "Java",
-    "JavaScript",
-    "Lisp",
-    "Perl",
-    "PHP",
-    "Python",
-    "Ruby",
-    "Scala",
-    "Scheme"];
+var availableTags = [];
 $("#selector").autocomplete({
     source: availableTags,
-    messages: {noResults: '',results: function() {}}
+    messages: {noResults: '',results: function() {
+    }}
 });
 
 $( function() {
@@ -248,45 +226,291 @@ $( function() {
     values: [ mn, mx ],
     slide: function( event, ui ) {
       $( "#years" ).val( "" + ui.values[ 0 ] + " - " + ui.values[ 1 ] );
+      setValuesY(ui.values[ 0 ],ui.values[ 1]);
     }
   });
+  
   $( "#years" ).val( " " + $( "#slider-range" ).slider( "values", 0 ) +
     " - " + $( "#slider-range" ).slider( "values", 1 ) );
-} );
+
+    $( "#payLoad-range" ).slider({
+    range: true,
+    min: 1,
+    max: 140,
+    values: [ 1, 140 ],
+    slide: function( event, ui ) {
+      $( "#payLoad" ).val( "" + ui.values[ 0 ] + ",000 Kg- " + ui.values[ 1 ]+",000 Kg" );
+    }
+  });
+  $( "#payLoad" ).val( " " + $( "#payLoad-range" ).slider( "values", 0 ) +
+    ",000 Kg- " + $( "#payLoad-range" ).slider( "values", 1 )+",000 Kg" );
+
+    $( "#weight-range" ).slider({
+    range: true,
+    min: 1,
+    max: 3000,
+    values: [ 1, 3000 ],
+    slide: function( event, ui ) {
+      $( "#weight" ).val( "" + ui.values[ 0 ] + "K Kg- " + ui.values[ 1 ]+"K Kg" );
+    }
+  });
+  $( "#weight" ).val( " " + $( "#weight-range" ).slider( "values", 0 ) +
+    "K Kg- " + $( "#weight-range" ).slider( "values", 1 )+"K Kg" );
+
+
+    $( "#duration-range" ).slider({
+    range: true,
+    min: 1,
+    max: 3000,
+    values: [ 1, 3000 ],
+    slide: function( event, ui ) {
+      $( "#duration" ).val( "" + ui.values[ 0 ] + " - " + ui.values[ 1 ]+" Years" );
+    }
+  });
+  $( "#duration" ).val( " " + $( "#duration-range" ).slider( "values", 0 ) +
+    " - " + $( "#duration-range" ).slider( "values", 1 )+" Years" );
+
+
+    $("#Manned").on("click",function(){
+      if(!($("#Manned").is(':checked')))
+        $("#NuofAstro").removeClass('show');
+      else
+        $("#NuofAstro").addClass('show');
+    })
+
+    var handle = $( "#AstronotsCount" );
+    $( "#AstronotsCount_slider" ).slider({
+      min:1,
+      max:8,
+      value: 8,
+      create: function() {
+        handle.text( $( this ).slider( "value" ) );
+      },
+      slide: function( event, ui ) {
+        handle.text( ui.value );
+        setManned(ui.value);
+      }
+    });
+});
+
+var years_min = 1995,years_max=2018,AstronotsCount=8;
+
+function setValuesY(ymin,ymax){
+  years_min = ymin;
+  years_max = ymax;
+}
+
+function setManned(n){
+  AstronotsCount = n;
+}
+
+function fillData_search(){
+  var r = $("results");
+  r.empty();
+  var h = $("#hiden");
+  var counter = 0;
+  
+  for(i=0;i<data_list.length;i++){
+    var cond = true;
+    console.log($('#selector')[0].value.split('  :')[0]);
+    k = $('#selector')[0].value.split('  :')[1];
+    v = $('#selector')[0].value.split('  :')[0]; 
+    for (var key in data_list[i]){
+      if(key == k)
+        if (data_list[i][k].value.indexOf(v) !=-1){
+          cond =false;
+          break;
+          }
+      }
+    if(cond)
+      continue;
+
+    counter+=1;
+    var bp = $("<blogp></blogp>");
+
+    for (var key in data_list[i]){
+        if(key == 'wikipedia'){
+          var a = $("<a></a>");
+          a.attr('href',data_list[i][key].value);
+          a.text(key + " : " + data_list[i][key].value);
+          bp.append(a);
+          continue;
+        }
+        if(key == 'crews'){
+          if(data_list[i][key].value == '')
+          continue;
+        }
+        if(key == 'image' || key == 'item'){
+          continue;
+        } 
+        var d = $("<div></div>");
+        if(key == 'itemLabel')
+        d.text('Name' + " : " + data_list[i][key].value);
+        else if(key == 'launchdate')
+        d.text(key + " : " + data_list[i][key].value.substring(0,4));
+        else
+          d.text(key + " : " + data_list[i][key].value);
+        bp.append(d);
+    }
+    r.append(bp);
+    r.append($('<hr>'));
+  }
+
+}
 
 
 function fillData(){
   var r = $("results");
+  r.empty();
   var h = $("#hiden");
-  console.log(data.length);
-  for(i=0;i<data.length;i++){
+  // console.log(data_list.length);
+  var counter = 0;
+  
+  if(availableTags.length == 0){
+    for(i=0;i<data_list.length;i++){
+    for (var key in data_list[i]){
+      if(key == 'item')
+        continue;
+      if(key == 'crews'){
+        var lis = data_list[i][key].value.split(",");
+        for (var el in lis){
+          availableTags.push(lis[el]+'  :'+key);  
+          }
+        }
+        else {
+          if(key == 'launchdate')
+          availableTags.push(data_list[i][key].value.substring(0,4)+'  :'+key);
+          else
+          availableTags.push(data_list[i][key].value+'  :'+key);
+        }
+      }
+    }
+  }
+
+  
+  for(i=0;i<data_list.length;i++){
+    // if(counter>20)
+    //   break;
+    // counter+=1;
+    // console.log(years_max);
+    // console.log(data_list[i]['crews'].value.split(",").length );
+    if(years_min>data_list[i]['launchdate'].value.substring(0,4) || years_max<data_list[i]['launchdate'].value.substring(0,4))
+      continue;
+    if($('#Manned').is(":checked") && !$('#Unmanned').is(":checked") ){
+      // console.log(data_list[i]['crews'].value.split(",").length);
+      if(data_list[i]['crews'].value.split(",").length > AstronotsCount || data_list[i]['crews'].value== '')
+        continue;
+    }
+    if(!$('#Manned').is(":checked") && $('#Unmanned').is(":checked") ){
+      if(data_list[i]['crews'].value != '')
+        continue;
+    }
+
+    counter+=1;
     var bp = $("<blogp></blogp>");
-    // var bd = $("<div></div>");
-    // bp.attr({"data-toggle":"modal", "data-target":"#blogp"+i});
-    // bd.attr("id","#blogp"+i);
-    // bd.addClass("modal fade");
-    // bd.attr({"role":"dialog","aria-labelledby":"exampleModalCenterTitle","aria-hidden":"true"});
-    // var j = 2;
-    for (var key in data[i]){
-      // if(j>0){
+    var divrow = $("<div></div>");
+    var leftdiv = $("<div></div>");
+    var rightdiv = $("<div></div>");
+
+    for (var key in data_list[i]){
+        if(key == 'wikipedia'){
+          var a = $("<a></a>");
+          a.attr('href',data_list[i][key].value);
+          a.text(key + " : " + data_list[i][key].value);
+          bp.append(a);
+          continue;
+        }
+        if(key == 'crews'){
+          if(data_list[i][key].value == '')
+          continue;
+        }
+        if(key == 'image' || key == 'item'){
+          continue;
+        } 
         var d = $("<div></div>");
-        d.text(key + " : " + data[i][key]);
+        if(key == 'itemLabel')
+        d.text('Name' + " : " + data_list[i][key].value);
+        else if(key == 'launchdate')
+        d.text(key + " : " + data_list[i][key].value.substring(0,4));
+        else
+          d.text(key + " : " + data_list[i][key].value);
         bp.append(d);
-      // }
-      // j-=1;
-      // var d2 = $("<div></div>");
-      // var d3 = $("<div></div>");
-      // var d4 = $("<div></div>");
-      // d2.addClass("row");
-      // d3.addClass("col-4");
-      // d4.addClass("col-6");
-      // d3.text(key);
-      // d4.text(data[i][key]);
-      // d2.append(d3);
-      // d2.append(d4);
-      // bd.append(d2);
     }
     r.append(bp);
-    // h.append(bd);
+    r.append($('<hr>'));
   }
+}
+
+function filter_listener(){
+  console.log('listner');
+  // $('#Manned').change(function(){
+  //   console.log('listner22');
+  //   fillData(); 
+  // });
+  // $('#Unmanned').change(function(){fillData();});
+  // $('#Scientific').change(function(){fillData();});
+  // $('#Exploration').change(function(){fillData();});
+  // $('#Military').change(function(){fillData();});
+  // $('#Success').change(function(){fillData();});
+  // $('#Unsuccess').change(function(){fillData();});
+}
+var td;
+
+function get_search(){
+var endpointUrl = 'https://query.wikidata.org/sparql?',
+    sparqlQuery = 'SELECT DISTINCT ?item ?itemLabel ?launchdate (GROUP_CONCAT(distinct ?crewLabel; SEPARATOR=", ") AS ?crews)  (SAMPLE(?image) AS ?image) ?wikipedia ?launchsite WHERE {'+
+    '{ ?item wdt:P31 wd:Q26529. }'+
+    'UNION'+
+    '{ ?item wdt:P31 wd:Q1378139. }'+
+    'UNION'+
+    '{ ?item wdt:P31 wd:Q2133344. }'+
+    'UNION'+
+    '{ ?item wdt:P31 wd:Q40218. }'+
+    'UNION'+
+    '{ ?item wdt:P31 wd:Q752783. }'+
+    'UNION'+
+    '{ ?item wdt:P137 wd:Q23548. }'+
+    'UNION'+
+    '{ ?item wdt:P1427 wd:Q845774. }'+
+    'UNION'+
+    '{ ?item wdt:P31 wd:Q5916. }'+
+    '?item wdt:P619 ?launchdate.'+
+    '?item rdfs:label ?itemLabel.'+
+    'OPTIONAL { ?item wdt:P18 ?image. }'+
+    'OPTIONAL{'+
+    '?item wdt:P1029 ?crew .'+
+    '?crew rdfs:label ?crewLabel.'+
+    'FILTER((LANG(?crewLabel)) = "en")'+
+    '    FILTER(!CONTAINS(LCASE(?crewLabel), "\'"@en))'+
+    '    }'+
+    'OPTIONAL {'+
+    '  ?wikipedia schema:about ?item .'+
+    '  ?wikipedia schema:inLanguage "en" .'+
+    '  FILTER (SUBSTR(str(?wikipedia), 1, 25) = "https://en.wikipedia.org/")'+
+    '}'+
+    '    OPTIONAL{'+
+    '      ?item wdt:P1427 ?lsite .'+
+    '      ?lsite rdfs:label ?launchsite .'+
+    '      FILTER((LANG(?launchsite)) = "en")'+
+    '      FILTER(!CONTAINS(LCASE(?launchsite), "\'"@en))'+
+   '     }'+
+   ' FILTER((LANG(?itemLabel)) = "en")'+
+   ' FILTER(!CONTAINS(LCASE(?itemLabel), "\'"@en))'+
+  '}'+
+ 'GROUP BY ?item ?itemLabel ?launchdate  ?wikipedia ?launchsite',
+    settings = {
+        headers: { Accept: 'application/sparql-results+json' },
+        data: { query: sparqlQuery }
+    };
+
+  $.ajax( endpointUrl, settings ).then( function ( data ) {
+      // $( 'body' ).append( ( $('<pre>').text( JSON.stringify( data) ) ) );
+      let results = data["results"]["bindings"];
+      td = results[0];
+      for (let i = 0; i < results.length; i++) {
+        // data_list.push(temp);
+        data_list.push(results[i]);
+      //  console.log(results[i]);
+        }
+  });
 }
